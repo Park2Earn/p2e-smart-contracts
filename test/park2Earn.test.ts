@@ -50,11 +50,25 @@ describe("Park2Earn tests", function () {
     expect(getAddress(getPromo.token)).to.equal(usdc.address);
   });
 
+  it("Should get promotions count", async function () {
+    await park2EarnContract.createPromotion(usdc.address, _start, promoLength);
+    await park2EarnContract.createPromotion(usdc.address, _start, promoLength);
+
+    expect(await park2EarnContract.getLatestPromotionCount()).to.equal(2);
+  });
+
   it("Should create and get private good", async function () {
     await park2EarnContract.createPrivateGood(alice.address);
     const privateGood = await park2EarnContract.getPrivateGood(1);
 
     expect(privateGood.recipient).to.equal(alice.address);
+  });
+
+  it("Should get private good count", async function () {
+    await park2EarnContract.createPrivateGood(alice.address);
+    await park2EarnContract.createPrivateGood(alice.address);
+
+    expect(await park2EarnContract.getPrivateGoodsCount()).to.equal(2);
   });
 
   it("Should stake correct amount", async function () {
@@ -161,6 +175,7 @@ describe("Park2Earn tests", function () {
       park2EarnContract.connect(bob).withdraw(0, 1)
     ).to.be.revertedWith("Invalid amount!");
   });
+
   it("Should revert if not enough staked", async function () {
     const blockNumBefore = await ethers.provider.getBlockNumber();
     const blockBefore = await ethers.provider.getBlock(blockNumBefore);
@@ -182,25 +197,6 @@ describe("Park2Earn tests", function () {
     await expect(
       park2EarnContract.connect(bob).withdraw(stakingAmount + 1, 1)
     ).to.be.revertedWith("Not enough staked!");
-  });
-
-  it("Should revert if nothing staked", async function () {
-    const blockNumBefore = await ethers.provider.getBlockNumber();
-    const blockBefore = await ethers.provider.getBlock(blockNumBefore);
-    const timestampBefore = blockBefore.timestamp;
-
-    await park2EarnContract.createPromotion(
-      usdc.address,
-      timestampBefore,
-      promoLength
-    );
-
-    await ethers.provider.send("evm_increaseTime", [promoLength]);
-    await ethers.provider.send("evm_mine", [timestampBefore + promoLength]);
-
-    await expect(
-      park2EarnContract.connect(bob).withdraw(stakingAmount, 1)
-    ).to.be.revertedWith("Nothing staked!");
   });
 
   it("Should withdraw tokens", async function () {

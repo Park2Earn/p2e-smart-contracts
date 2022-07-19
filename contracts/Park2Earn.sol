@@ -81,6 +81,10 @@ contract Park2Earn is Ownable {
     return getPrivateGood(_latestPromotionId);
   }
 
+  function getLatestPromotionCount() public view returns (uint256 count) {
+    count = _latestPromotionId;
+  }
+
   function isPromotionExpired(uint256 id) public view returns (bool isExpired) {
     uint256 endTime = _promotions[id].startTime.add(
       _promotions[id].promoLength
@@ -114,6 +118,10 @@ contract Park2Earn is Ownable {
   function getPrivateGood(uint256 id) public view returns (PrivateGood memory) {
     PrivateGood memory privateGood = _privateGoods[id];
     return privateGood;
+  }
+
+  function getPrivateGoodsCount() public view returns (uint256 count) {
+    count = _latestPrivateGoodId;
   }
 
   function stake(
