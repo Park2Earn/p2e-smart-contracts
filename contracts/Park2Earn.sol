@@ -81,7 +81,7 @@ contract Park2Earn is Ownable {
     return getPrivateGood(_latestPromotionId);
   }
 
-  function getLatestPromotionCount() public view returns (uint256 count) {
+  function getPromotionsCount() public view returns (uint256 count) {
     count = _latestPromotionId;
   }
 

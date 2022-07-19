@@ -54,7 +54,7 @@ describe("Park2Earn tests", function () {
     await park2EarnContract.createPromotion(usdc.address, _start, promoLength);
     await park2EarnContract.createPromotion(usdc.address, _start, promoLength);
 
-    expect(await park2EarnContract.getLatestPromotionCount()).to.equal(2);
+    expect(await park2EarnContract.getPromotionsCount()).to.equal(2);
   });
 
   it("Should create and get private good", async function () {
