@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv";
 
-import { task } from "hardhat/config";
+import { HardhatUserConfig, task } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 
 dotenv.config();
@@ -20,9 +20,8 @@ task("accounts", "Prints the list of accounts", async (args, hre) => {
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 
-export default {
-  solidity: "0.8.9",
-  defaultNetwork: "localhost",
+const config: HardhatUserConfig = {
+  defaultNetwork: "hardhat",
   networks: {
     hardhat: {
       chainId: 1337,
@@ -33,7 +32,23 @@ export default {
     polygonMumbai: {
       chainId: 80001,
       url: "https://polygon-mumbai.infura.io/v3/31b6ae371a0c41c388ea3698de2bff46",
-      accounts: [PRIVATE_KEY],
+      accounts: [PRIVATE_KEY!],
     },
   },
+  solidity: {
+    compilers: [
+      {
+        version: "0.8.9",
+        settings: {
+          outputSelection: {
+            "*": {
+              "*": ["storageLayout"],
+            },
+          },
+        },
+      },
+    ],
+  },
 };
+
+export default config;
