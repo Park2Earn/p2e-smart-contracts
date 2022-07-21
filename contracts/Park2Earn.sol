@@ -54,6 +54,8 @@ contract Park2Earn is Ownable {
   mapping(uint256 => PrivateGood) private _privateGoods;
   uint256 internal _latestPrivateGoodId;
 
+  mapping(uint256 => uint256[]) private _promotionWinners;
+
   //mapping between promotion and user staked
   mapping(address => Staker) private _stakes;
 
@@ -116,6 +118,41 @@ contract Park2Earn is Ownable {
     returns (bool)
   {
     return _promotions[promotionId].token == IERC20(token);
+  }
+
+  function setPromotionWinners(uint256 promotionId, uint256[] memory winners)
+    public
+    onlyOwner
+  {
+    require(!isPromotionExpired(promotionId), "Promotion is still running!");
+    _promotionWinners[promotionId] = winners;
+  }
+
+  function distributeWinners(
+    uint256 promotionId,
+    address token,
+    uint256 amount
+  ) external onlyOwner {
+    require(!isPromotionExpired(promotionId), "Promotion is still running!");
+    uint256[] memory winners = _promotionWinners[promotionId];
+    uint256 winnersLength = winners.length;
+    uint256 amountSplit = amount.div(winners.length);
+
+    if (winnersLength > 0) {
+      IERC20(token).approve(address(this), amount);
+      for (uint256 i = 1; i <= winnersLength; i++) {
+        address target = _privateGoods[i].recipient;
+
+        if (amountSplit > 0) {
+          bool success = IERC20(token).transferFrom(
+            address(this),
+            target,
+            amountSplit
+          );
+          require(success, "Failed to send amount for transfer.");
+        }
+      }
+    }
   }
 
   function createPrivateGood(

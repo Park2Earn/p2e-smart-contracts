@@ -13,6 +13,9 @@ import { getAddress } from "ethers/lib/utils";
 describe("Park2Earn tests", function () {
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
+  let john: SignerWithAddress;
+  let peter: SignerWithAddress;
+  let karen: SignerWithAddress;
 
   let park2EarnFactory: ContractFactory;
   let erc20Factory: MockContractFactory<ContractFactory>;
@@ -22,14 +25,14 @@ describe("Park2Earn tests", function () {
   let park2EarnContract: Park2Earn;
 
   const _start = Math.round(Date.now() / 1000);
-  const promoLength = 60 * 60 * 8;
-  // Initial mint 10,000
-  const initialMint = "10000000000000000000000";
+  const promoLength = 691200;
+  // Initial mint 10,000,000,000
+  const initialMint = "1000000000000000";
   // Staking amount 1000
-  const stakingAmount = "1000000000000000000000";
+  const stakingAmount = "1000000000";
 
   before(async () => {
-    [alice, bob] = await ethers.getSigners();
+    [alice, bob, peter, john, karen] = await ethers.getSigners();
     park2EarnFactory = await ethers.getContractFactory("Park2Earn");
     erc20Factory = await smock.mock("MockERC20");
   });
@@ -39,15 +42,16 @@ describe("Park2Earn tests", function () {
       "0x0000000000000000000000000000000000000000"
     )) as Park2Earn;
 
-    usdc = await erc20Factory.deploy("Usdc token", "USDC", 18);
-    usdt = await erc20Factory.deploy("Usdt token", "USDT", 18);
+    usdc = await erc20Factory.deploy("Usdc token", "USDC", 6);
+    usdt = await erc20Factory.deploy("Usdt token", "USDT", 6);
     await usdc.mint(bob.address, initialMint);
   });
 
   it("Should create and get promotion", async function () {
+    const _startPromo = Math.round(Date.now() / 1000);
     await park2EarnContract.createPromotion(
       usdc.address,
-      _start,
+      _startPromo,
       promoLength,
       "Best promotion",
       "This one is great"
@@ -293,5 +297,59 @@ describe("Park2Earn tests", function () {
     await park2EarnContract.connect(bob).withdrawStaked(stakingAmount, 1);
 
     expect(await park2EarnContract.getAmountStaked(bob.address)).to.be.equal(0);
+  });
+
+  it("Should distribute winners", async function () {
+    const blockNumBefore = await ethers.provider.getBlockNumber();
+    const blockBefore = await ethers.provider.getBlock(blockNumBefore);
+    const timestampBefore = blockBefore.timestamp;
+
+    await park2EarnContract.createPromotion(
+      usdc.address,
+      timestampBefore,
+      promoLength,
+      "Best promotion",
+      "This one is great"
+    );
+
+    await park2EarnContract.createPrivateGood(
+      peter.address,
+      1,
+      "Private good 1",
+      "Best private good 1"
+    );
+
+    await park2EarnContract.createPrivateGood(
+      karen.address,
+      1,
+      "Private good 2",
+      "Best private good 2"
+    );
+
+    await park2EarnContract.createPrivateGood(
+      john.address,
+      1,
+      "Private good 3",
+      "Best private good 3"
+    );
+
+    await usdc.connect(bob).approve(park2EarnContract.address, stakingAmount);
+
+    await park2EarnContract.connect(bob).stake(usdc.address, stakingAmount, 1);
+
+    await ethers.provider.send("evm_increaseTime", [promoLength]);
+    await ethers.provider.send("evm_mine", [timestampBefore + promoLength]);
+
+    await park2EarnContract.setPromotionWinners(1, [1, 2, 3]);
+
+    await park2EarnContract.distributeWinners(
+      1,
+      usdc.address.toString(),
+      stakingAmount
+    );
+
+    expect(await usdc.balanceOf(peter.address)).to.equal("333333333");
+    expect(await usdc.balanceOf(karen.address)).to.equal("333333333");
+    expect(await usdc.balanceOf(john.address)).to.equal("333333333");
   });
 });
