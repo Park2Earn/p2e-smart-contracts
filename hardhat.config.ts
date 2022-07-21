@@ -5,7 +5,7 @@ import "@nomicfoundation/hardhat-toolbox";
 
 dotenv.config();
 
-const { PRIVATE_KEY } = process.env;
+const { PRIVATE_KEY, INFURA_PROJECT_ID } = process.env;
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -29,9 +29,9 @@ const config: HardhatUserConfig = {
     localhost: {
       chainId: 1337,
     },
-    polygonMumbai: {
+    mumbai: {
       chainId: 80001,
-      url: "https://polygon-mumbai.infura.io/v3/31b6ae371a0c41c388ea3698de2bff46",
+      url: `https://polygon-mumbai.infura.io/v3/${INFURA_PROJECT_ID!}`,
       accounts: [PRIVATE_KEY!],
     },
   },
