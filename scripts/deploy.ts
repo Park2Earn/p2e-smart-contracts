@@ -1,14 +1,12 @@
 import { ethers } from "hardhat";
 
+const { AAVE_LENDING_POOL_POLYGON } = process.env;
+
 async function main() {
   const park2Earn = await ethers.getContractFactory("Park2Earn");
-  const gooddeedToken = await ethers.getContractFactory("GooddeedToken");
 
-  const park2EarnDeploy = await park2Earn.deploy();
+  const park2EarnDeploy = await park2Earn.deploy(AAVE_LENDING_POOL_POLYGON!);
   console.log("Park2Earn deploy address", park2EarnDeploy.address);
-
-  const gooddeedTokenDeploy = await gooddeedToken.deploy();
-  console.log("Gooddeed deploy address", gooddeedTokenDeploy.address);
 }
 
 main()

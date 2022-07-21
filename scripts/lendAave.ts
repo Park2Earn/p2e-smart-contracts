@@ -3,18 +3,15 @@ import { park2EarnContract } from "./initialiseContract";
 const { USDC_ADDRESS } = process.env;
 
 async function main() {
-  const _start = Math.round(Date.now() / 1000); // unix timestamp in seconds
-  const length = 60 * 60 * 8;
-
-  const tx = await park2EarnContract.createPromotion(
+  const amount = "1000000000";
+  const referralCode = "0x0000000000000000000000000000000000000000";
+  const tx = await park2EarnContract.depositAave(
     USDC_ADDRESS!,
-    _start,
-    length,
-    "Best promotion",
-    "Nice description"
+    amount,
+    referralCode
   );
 
-  console.log("tx:", tx);
+  console.log("Tx", tx);
 }
 
 main()
