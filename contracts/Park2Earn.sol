@@ -8,9 +8,16 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "./interfaces/IAaveLendingPool.sol";
 
 contract Park2Earn is Ownable {
   using SafeMath for uint256;
+
+  address _aaveLendingPool;
+
+  constructor(address aaveLendingPool) {
+    _aaveLendingPool = aaveLendingPool;
+  }
 
   struct Promotion {
     address creator;
@@ -18,12 +25,17 @@ contract Park2Earn is Ownable {
     uint256 createdAt;
     uint256 startTime;
     uint256 promoLength;
+    string title;
+    string description;
   }
 
   struct PrivateGood {
     address creator;
     uint256 createdAt;
     address recipient;
+    uint256 promotionId;
+    string title;
+    string description;
   }
 
   struct Staker {
@@ -48,11 +60,15 @@ contract Park2Earn is Ownable {
   function createPromotion(
     address token,
     uint256 startTime,
-    uint256 length
+    uint256 length,
+    string memory title,
+    string memory description
   ) public onlyOwner {
     require(address(token) != address(0), "Can't be zero address");
     require(startTime > 0, "Start time must be positive");
     require(length > 0, "Lenght must be positive");
+    require(bytes(title).length > 0, "Title can't be empty");
+    require(bytes(description).length > 0, "Description can't be empty");
 
     uint256 nextPromotionId = _latestPromotionId.add(1);
     _latestPromotionId = nextPromotionId;
@@ -62,7 +78,9 @@ contract Park2Earn is Ownable {
       token: IERC20(token),
       createdAt: block.timestamp,
       startTime: startTime,
-      promoLength: length
+      promoLength: length,
+      title: title,
+      description: description
     });
 
     emit CreatePromotion(nextPromotionId);
@@ -100,8 +118,16 @@ contract Park2Earn is Ownable {
     return _promotions[promotionId].token == IERC20(token);
   }
 
-  function createPrivateGood(address recipient) public onlyOwner {
+  function createPrivateGood(
+    address recipient,
+    uint256 promotionId,
+    string memory title,
+    string memory description
+  ) public onlyOwner {
     require(recipient != address(0), "Can't be zero address");
+    require(isPromotionExpired(promotionId), "Promotion expired!");
+    require(bytes(title).length > 0, "Title can't be empty");
+    require(bytes(description).length > 0, "Description can't be empty");
 
     uint256 nextPrivateGoodId = _latestPrivateGoodId.add(1);
     _latestPrivateGoodId = nextPrivateGoodId;
@@ -109,7 +135,10 @@ contract Park2Earn is Ownable {
     _privateGoods[nextPrivateGoodId] = PrivateGood({
       creator: msg.sender,
       createdAt: block.timestamp,
-      recipient: recipient
+      recipient: recipient,
+      promotionId: promotionId,
+      title: title,
+      description: description
     });
 
     emit CreatePrivateGood(_latestPrivateGoodId);
@@ -139,7 +168,7 @@ contract Park2Earn is Ownable {
     emit StakedTokens(msg.sender, amount, promotionId);
   }
 
-  function withdraw(uint256 amount, uint256 promotionId) public {
+  function withdrawStaked(uint256 amount, uint256 promotionId) public {
     require(!isPromotionExpired(promotionId), "Promotion still running!");
     require(amount > 0, "Invalid amount!");
     require(_stakes[msg.sender].amount >= amount, "Not enough staked!");
@@ -161,5 +190,33 @@ contract Park2Earn is Ownable {
     returns (uint256 amount)
   {
     amount = _stakes[staker].amount;
+  }
+
+  function depositAave(
+    address asset,
+    uint256 amount,
+    uint16 referralCode
+  ) external onlyOwner {
+    require(asset != address(0), "Asset has to be non zero address");
+    require(amount > 0, "Invalid amount");
+    require(
+      IERC20(asset).balanceOf(address(this)) >= amount,
+      "Not enough balance!"
+    );
+
+    IERC20(asset).approve(_aaveLendingPool, amount);
+    IAaveLendingPool(_aaveLendingPool).deposit(
+      asset,
+      amount,
+      address(this),
+      referralCode
+    );
+  }
+
+  function withdrawAave(address asset, uint256 amount) external onlyOwner {
+    require(asset != address(0), "Asset has to be non zero address");
+    require(amount > 0, "Invalid amount");
+
+    IAaveLendingPool(_aaveLendingPool).withdraw(asset, amount, address(this));
   }
 }

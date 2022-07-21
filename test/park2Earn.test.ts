@@ -35,7 +35,9 @@ describe("Park2Earn tests", function () {
   });
 
   beforeEach(async () => {
-    park2EarnContract = (await park2EarnFactory.deploy()) as Park2Earn;
+    park2EarnContract = (await park2EarnFactory.deploy(
+      "0x0000000000000000000000000000000000000000"
+    )) as Park2Earn;
 
     usdc = await erc20Factory.deploy("Usdc token", "USDC", 18);
     usdt = await erc20Factory.deploy("Usdt token", "USDT", 18);
@@ -43,7 +45,13 @@ describe("Park2Earn tests", function () {
   });
 
   it("Should create and get promotion", async function () {
-    await park2EarnContract.createPromotion(usdc.address, _start, promoLength);
+    await park2EarnContract.createPromotion(
+      usdc.address,
+      _start,
+      promoLength,
+      "Best promotion",
+      "This one is great"
+    );
     const getPromo = await park2EarnContract.getPromotion(1);
 
     expect(getPromo.promoLength).to.equal(promoLength);
@@ -51,28 +59,75 @@ describe("Park2Earn tests", function () {
   });
 
   it("Should get promotions count", async function () {
-    await park2EarnContract.createPromotion(usdc.address, _start, promoLength);
-    await park2EarnContract.createPromotion(usdc.address, _start, promoLength);
+    await park2EarnContract.createPromotion(
+      usdc.address,
+      _start,
+      promoLength,
+      "Best promotion",
+      "This one is great"
+    );
+    await park2EarnContract.createPromotion(
+      usdc.address,
+      _start,
+      promoLength,
+      "Best promotion",
+      "This one is great"
+    );
 
     expect(await park2EarnContract.getPromotionsCount()).to.equal(2);
   });
 
   it("Should create and get private good", async function () {
-    await park2EarnContract.createPrivateGood(alice.address);
+    await park2EarnContract.createPromotion(
+      usdc.address,
+      _start,
+      promoLength,
+      "Best promotion",
+      "This one is great"
+    );
+    await park2EarnContract.createPrivateGood(
+      alice.address,
+      1,
+      "Private good",
+      "Best private good"
+    );
     const privateGood = await park2EarnContract.getPrivateGood(1);
 
     expect(privateGood.recipient).to.equal(alice.address);
   });
 
   it("Should get private good count", async function () {
-    await park2EarnContract.createPrivateGood(alice.address);
-    await park2EarnContract.createPrivateGood(alice.address);
+    await park2EarnContract.createPromotion(
+      usdc.address,
+      _start,
+      promoLength,
+      "Best promotion",
+      "This one is great"
+    );
+    await park2EarnContract.createPrivateGood(
+      alice.address,
+      1,
+      "Private good",
+      "Best private good"
+    );
+    await park2EarnContract.createPrivateGood(
+      alice.address,
+      1,
+      "Private good",
+      "Best private good"
+    );
 
     expect(await park2EarnContract.getPrivateGoodsCount()).to.equal(2);
   });
 
   it("Should stake correct amount", async function () {
-    await park2EarnContract.createPromotion(usdc.address, _start, promoLength);
+    await park2EarnContract.createPromotion(
+      usdc.address,
+      _start,
+      promoLength,
+      "Best promotion",
+      "This one is great"
+    );
     await usdc.connect(bob).approve(park2EarnContract.address, stakingAmount);
     await park2EarnContract.connect(bob).stake(usdc.address, stakingAmount, 1);
 
@@ -82,7 +137,13 @@ describe("Park2Earn tests", function () {
   });
 
   it("Should not stake if promotion expired", async function () {
-    await park2EarnContract.createPromotion(usdc.address, _start, promoLength);
+    await park2EarnContract.createPromotion(
+      usdc.address,
+      _start,
+      promoLength,
+      "Best promotion",
+      "This one is great"
+    );
     const blockNumBefore = await ethers.provider.getBlockNumber();
     const blockBefore = await ethers.provider.getBlock(blockNumBefore);
     const timestampBefore = blockBefore.timestamp;
@@ -105,7 +166,9 @@ describe("Park2Earn tests", function () {
     await park2EarnContract.createPromotion(
       usdc.address,
       timestampBefore,
-      promoLength
+      promoLength,
+      "Best promotion",
+      "This one is great"
     );
 
     await usdc.connect(bob).approve(park2EarnContract.address, stakingAmount);
@@ -123,7 +186,9 @@ describe("Park2Earn tests", function () {
     await park2EarnContract.createPromotion(
       usdc.address,
       timestampBefore,
-      promoLength
+      promoLength,
+      "Best promotion",
+      "This one is great"
     );
 
     await usdc.connect(bob).approve(park2EarnContract.address, stakingAmount);
@@ -141,7 +206,9 @@ describe("Park2Earn tests", function () {
     await park2EarnContract.createPromotion(
       usdc.address,
       timestampBefore,
-      promoLength
+      promoLength,
+      "Best promotion",
+      "This one is great"
     );
 
     await usdc.connect(bob).approve(park2EarnContract.address, stakingAmount);
@@ -149,7 +216,7 @@ describe("Park2Earn tests", function () {
     await park2EarnContract.connect(bob).stake(usdc.address, stakingAmount, 1);
 
     await expect(
-      park2EarnContract.connect(bob).withdraw(stakingAmount, 1)
+      park2EarnContract.connect(bob).withdrawStaked(stakingAmount, 1)
     ).to.be.revertedWith("Promotion still running!");
   });
 
@@ -161,7 +228,9 @@ describe("Park2Earn tests", function () {
     await park2EarnContract.createPromotion(
       usdc.address,
       timestampBefore,
-      promoLength
+      promoLength,
+      "Best promotion",
+      "This one is great"
     );
 
     await usdc.connect(bob).approve(park2EarnContract.address, stakingAmount);
@@ -172,7 +241,7 @@ describe("Park2Earn tests", function () {
     await ethers.provider.send("evm_mine", [timestampBefore + promoLength]);
 
     await expect(
-      park2EarnContract.connect(bob).withdraw(0, 1)
+      park2EarnContract.connect(bob).withdrawStaked(0, 1)
     ).to.be.revertedWith("Invalid amount!");
   });
 
@@ -184,7 +253,9 @@ describe("Park2Earn tests", function () {
     await park2EarnContract.createPromotion(
       usdc.address,
       timestampBefore,
-      promoLength
+      promoLength,
+      "Best promotion",
+      "This one is great"
     );
 
     await usdc.connect(bob).approve(park2EarnContract.address, stakingAmount);
@@ -195,7 +266,7 @@ describe("Park2Earn tests", function () {
     await ethers.provider.send("evm_mine", [timestampBefore + promoLength]);
 
     await expect(
-      park2EarnContract.connect(bob).withdraw(stakingAmount + 1, 1)
+      park2EarnContract.connect(bob).withdrawStaked(stakingAmount + 1, 1)
     ).to.be.revertedWith("Not enough staked!");
   });
 
@@ -207,7 +278,9 @@ describe("Park2Earn tests", function () {
     await park2EarnContract.createPromotion(
       usdc.address,
       timestampBefore,
-      promoLength
+      promoLength,
+      "Best promotion",
+      "This one is great"
     );
 
     await usdc.connect(bob).approve(park2EarnContract.address, stakingAmount);
@@ -217,7 +290,7 @@ describe("Park2Earn tests", function () {
     await ethers.provider.send("evm_increaseTime", [promoLength]);
     await ethers.provider.send("evm_mine", [timestampBefore + promoLength]);
 
-    await park2EarnContract.connect(bob).withdraw(stakingAmount, 1);
+    await park2EarnContract.connect(bob).withdrawStaked(stakingAmount, 1);
 
     expect(await park2EarnContract.getAmountStaked(bob.address)).to.be.equal(0);
   });
