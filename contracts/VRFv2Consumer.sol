@@ -33,9 +33,9 @@ contract VRFv2Consumer is VRFConsumerBaseV2 {
 
   // For this example, retrieve 2 random values in one request.
   // Cannot exceed VRFCoordinatorV2.MAX_NUM_WORDS.
-  uint32 numWords =  1;
+  uint32 numWords =  3;
 
-  uint256 public s_randomWords;
+  uint256[] public s_randomWords;
   uint256 public s_requestId;
   address s_owner;
 
@@ -61,7 +61,9 @@ contract VRFv2Consumer is VRFConsumerBaseV2 {
     uint256, /* requestId */
     uint256[] memory randomWords
   ) internal override {
-    s_randomWords = (randomWords[0] % 10) + 1;
+    for (uint256 i = 0; i < 3; i++) {
+      s_randomWords = (randomWords[0] % 10) + 1;
+    }
   }
 
   modifier onlyOwner() {
