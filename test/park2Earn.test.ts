@@ -81,7 +81,7 @@ describe("Park2Earn tests", function () {
     expect(await park2EarnContract.getPromotionsCount()).to.equal(2);
   });
 
-  it("Should create and get private good", async function () {
+  it("Should create and get public good", async function () {
     await park2EarnContract.createPromotion(
       usdc.address,
       _start,
@@ -89,18 +89,18 @@ describe("Park2Earn tests", function () {
       "Best promotion",
       "This one is great"
     );
-    await park2EarnContract.createPrivateGood(
+    await park2EarnContract.createPublicGood(
       alice.address,
       1,
-      "Private good",
-      "Best private good"
+      "Public good",
+      "Best public good"
     );
-    const privateGood = await park2EarnContract.getPrivateGood(1);
+    const publicGood = await park2EarnContract.getPublicGood(1);
 
-    expect(privateGood.recipient).to.equal(alice.address);
+    expect(publicGood.recipient).to.equal(alice.address);
   });
 
-  it("Should get private good count", async function () {
+  it("Should get public good count", async function () {
     await park2EarnContract.createPromotion(
       usdc.address,
       _start,
@@ -108,20 +108,20 @@ describe("Park2Earn tests", function () {
       "Best promotion",
       "This one is great"
     );
-    await park2EarnContract.createPrivateGood(
+    await park2EarnContract.createPublicGood(
       alice.address,
       1,
-      "Private good",
-      "Best private good"
+      "Public good",
+      "Best public good"
     );
-    await park2EarnContract.createPrivateGood(
+    await park2EarnContract.createPublicGood(
       alice.address,
       1,
-      "Private good",
-      "Best private good"
+      "Public good",
+      "Best public good"
     );
 
-    expect(await park2EarnContract.getPrivateGoodsCount()).to.equal(2);
+    expect(await park2EarnContract.getPublicGoodsCount()).to.equal(2);
   });
 
   it("Should stake correct amount", async function () {
@@ -312,25 +312,25 @@ describe("Park2Earn tests", function () {
       "This one is great"
     );
 
-    await park2EarnContract.createPrivateGood(
+    await park2EarnContract.createPublicGood(
       peter.address,
       1,
-      "Private good 1",
-      "Best private good 1"
+      "Public good 1",
+      "Best public good 1"
     );
 
-    await park2EarnContract.createPrivateGood(
+    await park2EarnContract.createPublicGood(
       karen.address,
       1,
-      "Private good 2",
-      "Best private good 2"
+      "Public good 2",
+      "Best public good 2"
     );
 
-    await park2EarnContract.createPrivateGood(
+    await park2EarnContract.createPublicGood(
       john.address,
       1,
-      "Private good 3",
-      "Best private good 3"
+      "Public good 3",
+      "Best public good 3"
     );
 
     await usdc.connect(bob).approve(park2EarnContract.address, stakingAmount);

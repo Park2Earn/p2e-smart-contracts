@@ -29,7 +29,7 @@ contract Park2Earn is Ownable {
     string description;
   }
 
-  struct PrivateGood {
+  struct PublicGood {
     address creator;
     uint256 createdAt;
     address recipient;
@@ -44,15 +44,15 @@ contract Park2Earn is Ownable {
   }
 
   event CreatePromotion(uint256 promotionId);
-  event CreatePrivateGood(uint256 privateGoodId);
+  event CreatePublicGood(uint256 privateGoodId);
   event StakedTokens(address staker, uint256 amount, uint256 promotionId);
   event WithdrawnTokens(address staker, uint256 amount);
 
   mapping(uint256 => Promotion) private _promotions;
   uint256 internal _latestPromotionId;
 
-  mapping(uint256 => PrivateGood) private _privateGoods;
-  uint256 internal _latestPrivateGoodId;
+  mapping(uint256 => PublicGood) private _publicGoods;
+  uint256 internal _latestPublicGoodId;
 
   mapping(uint256 => uint256[]) private _promotionWinners;
 
@@ -97,8 +97,8 @@ contract Park2Earn is Ownable {
     token = getPromotion(id).token;
   }
 
-  function getLatestPromotion() public view returns (PrivateGood memory) {
-    return getPrivateGood(_latestPromotionId);
+  function getLatestPromotion() public view returns (Promotion memory) {
+    return getPromotion(_latestPromotionId);
   }
 
   function getPromotionsCount() public view returns (uint256 count) {
@@ -141,7 +141,7 @@ contract Park2Earn is Ownable {
     if (winnersLength > 0) {
       IERC20(token).approve(address(this), amount);
       for (uint256 i = 1; i <= winnersLength; i++) {
-        address target = _privateGoods[i].recipient;
+        address target = _publicGoods[i].recipient;
 
         if (amountSplit > 0) {
           bool success = IERC20(token).transferFrom(
@@ -155,7 +155,7 @@ contract Park2Earn is Ownable {
     }
   }
 
-  function createPrivateGood(
+  function createPublicGood(
     address recipient,
     uint256 promotionId,
     string memory title,
@@ -166,10 +166,10 @@ contract Park2Earn is Ownable {
     require(bytes(title).length > 0, "Title can't be empty");
     require(bytes(description).length > 0, "Description can't be empty");
 
-    uint256 nextPrivateGoodId = _latestPrivateGoodId.add(1);
-    _latestPrivateGoodId = nextPrivateGoodId;
+    uint256 nextPublicGoodId = _latestPublicGoodId.add(1);
+    _latestPublicGoodId = nextPublicGoodId;
 
-    _privateGoods[nextPrivateGoodId] = PrivateGood({
+    _publicGoods[nextPublicGoodId] = PublicGood({
       creator: msg.sender,
       createdAt: block.timestamp,
       recipient: recipient,
@@ -178,16 +178,16 @@ contract Park2Earn is Ownable {
       description: description
     });
 
-    emit CreatePrivateGood(_latestPrivateGoodId);
+    emit CreatePublicGood(_latestPublicGoodId);
   }
 
-  function getPrivateGood(uint256 id) public view returns (PrivateGood memory) {
-    PrivateGood memory privateGood = _privateGoods[id];
-    return privateGood;
+  function getPublicGood(uint256 id) public view returns (PublicGood memory) {
+    PublicGood memory publicGood = _publicGoods[id];
+    return publicGood;
   }
 
-  function getPrivateGoodsCount() public view returns (uint256 count) {
-    count = _latestPrivateGoodId;
+  function getPublicGoodsCount() public view returns (uint256 count) {
+    count = _latestPublicGoodId;
   }
 
   function stake(
