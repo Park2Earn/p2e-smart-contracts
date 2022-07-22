@@ -62,7 +62,7 @@ contract VRFv2Consumer is VRFConsumerBaseV2 {
     uint256[] memory randomWords
   ) internal override {
     for (uint256 i = 0; i < 3; i++) {
-      s_randomWords = (randomWords[0] % 10) + 1;
+      s_randomWords[i] = (randomWords[i] % 10) + 1;
     }
   }
 

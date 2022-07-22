@@ -3,12 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@chainlink/contracts": "^0.4.1",
     "hardhat": "^2.10.1"
   },
   "scripts": {
     "prettier": "prettier --write 'contracts/**/*.sol'"
   },
   "devDependencies": {
+    "@appliedblockchain/chainlink-plugins-fund-link": "^0.0.3",
     "@defi-wonderland/smock": "^2.2.0",
     "@ethersproject/abi": "^5.4.7",
     "@ethersproject/providers": "^5.4.7",
@@ -26,6 +28,7 @@
     "chai": "^4.2.0",
     "dotenv": "^16.0.1",
     "ethers": "^5.4.7",
+    "hardhat-deploy": "^0.11.11",
     "hardhat-gas-reporter": "^1.0.8",
     "prettier": "^2.7.1",
     "prettier-plugin-solidity": "^1.0.0-dev.23",
