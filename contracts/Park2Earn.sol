@@ -160,7 +160,7 @@ contract Park2Earn is Ownable {
     uint256 promotionId,
     string memory title,
     string memory description
-  ) public onlyOwner {
+  ) public {
     require(recipient != address(0), "Can't be zero address");
     require(isPromotionExpired(promotionId), "Promotion expired!");
     require(bytes(title).length > 0, "Title can't be empty");
