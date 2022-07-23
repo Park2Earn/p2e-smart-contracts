@@ -10,12 +10,47 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./interfaces/IAaveLendingPool.sol";
 
-contract Park2Earn is Ownable {
+import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
+
+contract Park2Earn is Ownable, VRFConsumerBaseV2 {
   using SafeMath for uint256;
+
+  VRFCoordinatorV2Interface COORDINATOR;
+
+  // Chainlink subscription ID.
+  uint64 s_subscriptionId;
+
+  // Polygon mumbai coordinator chainlink.
+  address vrfCoordinator = 0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed;
+
+  // Gas lane Polygon mumbai chainlink
+  bytes32 keyHash =
+    0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f;
+
+  // Gas limit Polygon mumbai chainlink
+  uint32 callbackGasLimit = 100000;
+
+  // Confirmations Polygon mumbai chainlink
+  uint16 requestConfirmations = 3;
+
+  // For this example, retrieve 2 random values in one request.
+  // Cannot exceed VRFCoordinatorV2.MAX_NUM_WORDS.
+  uint32 numWords = 2;
+
+  //number of winners per promotion
+  uint8 numOfWinners = 2;
+
+  uint256[] public s_randomWords;
+  uint256 public s_requestId;
 
   address _aaveLendingPool;
 
-  constructor(address aaveLendingPool) {
+  constructor(uint64 subscriptionId, address aaveLendingPool)
+    VRFConsumerBaseV2(vrfCoordinator)
+  {
+    COORDINATOR = VRFCoordinatorV2Interface(vrfCoordinator);
+    s_subscriptionId = subscriptionId;
     _aaveLendingPool = aaveLendingPool;
   }
 
@@ -118,14 +153,6 @@ contract Park2Earn is Ownable {
     returns (bool)
   {
     return _promotions[promotionId].token == IERC20(token);
-  }
-
-  function setPromotionWinners(uint256 promotionId, uint256[] memory winners)
-    public
-    onlyOwner
-  {
-    require(!isPromotionExpired(promotionId), "Promotion is still running!");
-    _promotionWinners[promotionId] = winners;
   }
 
   function distributeWinners(
@@ -255,5 +282,47 @@ contract Park2Earn is Ownable {
     require(amount > 0, "Invalid amount");
 
     IAaveLendingPool(_aaveLendingPool).withdraw(asset, amount, address(this));
+  }
+
+  // Assumes the subscription is funded sufficiently.
+  function requestRandomWords() external onlyOwner {
+    // Will revert if subscription is not set and funded.
+    s_requestId = COORDINATOR.requestRandomWords(
+      keyHash,
+      s_subscriptionId,
+      requestConfirmations,
+      callbackGasLimit,
+      numWords
+    );
+  }
+
+  function fulfillRandomWords(
+    uint256, /* requestId */
+    uint256[] memory randomWords
+  ) internal override {
+    s_randomWords = randomWords;
+  }
+
+  function drawWinners(uint256 promotionId, uint256 moduloRange)
+    public
+    onlyOwner
+  {
+    uint256[] memory winners = new uint256[](numOfWinners);
+    if (_promotionWinners[promotionId].length == 0) {
+      for (uint256 i = 0; i < numOfWinners; i++) {
+        winners[i] =
+          (uint256(keccak256(abi.encode(s_randomWords, i))) % moduloRange) +
+          1;
+      }
+      _promotionWinners[promotionId] = winners;
+    }
+  }
+
+  function getPromotionWinners(uint256 promotionId)
+    public
+    view
+    returns (uint256[] memory winners)
+  {
+    winners = _promotionWinners[promotionId];
   }
 }

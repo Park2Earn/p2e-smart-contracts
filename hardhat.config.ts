@@ -5,7 +5,7 @@ import "@nomicfoundation/hardhat-toolbox";
 
 dotenv.config();
 
-const { PRIVATE_KEY, INFURA_PROJECT_ID } = process.env;
+const { PRIVATE_KEY, INFURA_PROJECT_ID, POLYGONSCAN_API_KEY } = process.env;
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -21,7 +21,7 @@ task("accounts", "Prints the list of accounts", async (args, hre) => {
 // Go to https://hardhat.org/config/ to learn more
 
 const config: HardhatUserConfig = {
-  defaultNetwork: "hardhat",
+  defaultNetwork: "mumbai",
   networks: {
     hardhat: {
       chainId: 1337,
@@ -34,6 +34,9 @@ const config: HardhatUserConfig = {
       url: `https://polygon-mumbai.infura.io/v3/${INFURA_PROJECT_ID!}`,
       accounts: [PRIVATE_KEY!],
     },
+  },
+  etherscan: {
+    apiKey: POLYGONSCAN_API_KEY!,
   },
   solidity: {
     compilers: [

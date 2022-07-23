@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@chainlink/contracts": "^0.4.1",
     "hardhat": "^2.10.1"
   },
   "scripts": {

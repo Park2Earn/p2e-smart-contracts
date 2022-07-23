@@ -15,3 +15,11 @@ npx hardhat run scripts/deploy.ts
 ### Deploy to local node
 
 npx hardhat run --network hardhat scripts/deploy.ts
+
+## Verify smart contract
+
+npx hardhat verify --constructor-args arguments.js DEPLOYED_SMART_CONTRACT_ADDRESS
+
+- put arguments.js file in root folder
+- populate with:
+  `module.exports = ["arg 1", "arg 2"...]`;
