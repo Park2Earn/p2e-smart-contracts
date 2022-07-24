@@ -160,7 +160,6 @@ contract Park2Earn is Ownable, VRFConsumerBaseV2 {
     address token,
     uint256 amount
   ) external onlyOwner {
-    require(!isPromotionExpired(promotionId), "Promotion is still running!");
     uint256[] memory winners = _promotionWinners[promotionId];
     uint256 winnersLength = winners.length;
     uint256 amountSplit = amount.div(winners.length);
