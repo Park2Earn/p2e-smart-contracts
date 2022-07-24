@@ -38,8 +38,11 @@ describe("Park2Earn tests", function () {
   });
 
   beforeEach(async () => {
+    const chainlinkSubscriptionID = "1105";
+    const aavePool = "0x0000000000000000000000000000000000000000";
     park2EarnContract = (await park2EarnFactory.deploy(
-      "0x0000000000000000000000000000000000000000"
+      chainlinkSubscriptionID,
+      aavePool
     )) as Park2Earn;
 
     usdc = await erc20Factory.deploy("Usdc token", "USDC", 6);
@@ -340,7 +343,7 @@ describe("Park2Earn tests", function () {
     await ethers.provider.send("evm_increaseTime", [promoLength]);
     await ethers.provider.send("evm_mine", [timestampBefore + promoLength]);
 
-    await park2EarnContract.setPromotionWinners(1, [1, 2, 3]);
+    // await park2EarnContract.setWinners(1, [1, 2, 3]);
 
     await park2EarnContract.distributeWinners(
       1,
